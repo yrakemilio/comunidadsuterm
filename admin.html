@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Comunidad SUTERM</title>
+<link rel="stylesheet" href="style.css">
+<meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+
+<header class="site">
+  <div class="site-header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">CS</span>
+      <span class="brand-name">Comunidad SUTERM</span>
+    </a>
+    <span class="brand-sub">Panel de administración</span>
+  </div>
+</header>
+
+<!-- ---------- LOGIN ---------- -->
+<main class="wrap" id="login-view">
+  <div class="panel login-box">
+    <h2>Iniciar sesión</h2>
+    <div class="field">
+      <label for="li-email">Correo</label>
+      <input type="email" id="li-email" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="li-pass">Contraseña</label>
+      <input type="password" id="li-pass" autocomplete="current-password">
+    </div>
+    <button class="btn primary" id="btn-login" style="width:100%;justify-content:center;">Entrar</button>
+    <p id="login-error" style="color:#A23B2E;font-size:0.85rem;margin-top:10px;"></p>
+  </div>
+</main>
+
+<!-- ---------- PANEL ---------- -->
+<main class="wrap admin-shell" id="panel-view" hidden>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <h1 style="font-family:var(--display);font-size:1.3rem;margin:0;">Anuncios</h1>
+    <button class="icon-btn" id="btn-logout">Cerrar sesión</button>
+  </div>
+
+  <div class="admin-grid">
+    <div class="panel">
+      <h2 id="form-title">Nuevo anuncio</h2>
+      <form id="form-anuncio">
+        <div class="field">
+          <label for="a-id">Id (slug único, sin espacios) *</label>
+          <input type="text" id="a-id" required pattern="[a-z0-9_\-]+">
+        </div>
+        <div class="field">
+          <label for="a-nombre">Nombre *</label>
+          <input type="text" id="a-nombre" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="a-seccion">Sección *</label>
+            <input type="text" id="a-seccion" required>
+          </div>
+          <div class="field">
+            <label for="a-ciudad">Ciudad *</label>
+            <input type="text" id="a-ciudad" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="a-categoria">Categoría *</label>
+          <input type="text" id="a-categoria" required list="cats">
+          <datalist id="cats">
+            <option value="Servicios"></option>
+            <option value="Productos"></option>
+            <option value="Alimentos"></option>
+          </datalist>
+        </div>
+        <div class="field">
+          <label for="a-desc">Descripción</label>
+          <textarea id="a-desc"></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="a-whats">WhatsApp (10 dígitos)</label>
+            <input type="text" id="a-whats">
+          </div>
+          <div class="field">
+            <label for="a-descuento">Descuento</label>
+            <input type="text" id="a-descuento">
+          </div>
+        </div>
+        <div class="field">
+          <label for="a-pagina">Página web</label>
+          <input type="text" id="a-pagina" placeholder="notiene.com">
+        </div>
+        <div class="field">
+          <label for="a-logo-file">Logo (imagen)</label>
+          <input type="file" id="a-logo-file" accept="image/*">
+        </div>
+        <div class="field">
+          <label for="a-img-file">Imagen del anuncio</label>
+          <input type="file" id="a-img-file" accept="image/*">
+        </div>
+        <div class="field">
+          <label><input type="checkbox" id="a-activo" checked style="width:auto;"> Publicado (visible en el directorio)</label>
+        </div>
+        <button class="btn primary" type="submit" style="width:100%;justify-content:center;" id="btn-guardar">Guardar anuncio</button>
+        <button class="icon-btn" type="button" id="btn-cancelar-edicion" style="width:100%;margin-top:8px;" hidden>Cancelar edición</button>
+        <p id="form-msg" style="font-size:0.85rem;margin-top:10px;"></p>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>Anuncios publicados</h2>
+      <div id="lista-anuncios">
+        <p style="color:var(--ink-faint);font-family:var(--mono);font-size:0.85rem;">Cargando…</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
