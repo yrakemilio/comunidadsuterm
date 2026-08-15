@@ -8,7 +8,9 @@ const formAnuncio = document.getElementById('form-anuncio');
 const formTitle = document.getElementById('form-title');
 const btnCancelEdit = document.getElementById('btn-cancel-edit');
 const tablaBody = document.getElementById('tabla-anuncios-body');
+const uploadStatus = document.getElementById('upload-status');
 
+// Verificar sesión
 async function revisarSesion() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session) {
@@ -23,6 +25,7 @@ async function revisarSesion() {
   }
 }
 
+// Login
 formLogin.addEventListener('submit', async (e) => {
   e.preventDefault();
   loginError.style.display = 'none';
@@ -38,11 +41,35 @@ formLogin.addEventListener('submit', async (e) => {
   }
 });
 
+// Logout
 btnLogout.addEventListener('click', async () => {
   await supabaseClient.auth.signOut();
   revisarSesion();
 });
 
+// Subir un archivo al bucket 'imagenes' de Supabase
+async function subirArchivo(file) {
+  if (!file) return null;
+  const extension = file.name.split('.').pop();
+  const nombreArchivo = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${extension}`;
+  
+  const { data, error } = await supabaseClient.storage
+    .from('imagenes')
+    .upload(nombreArchivo, file, { cacheControl: '3600', upsert: false });
+
+  if (error) {
+    console.error('Error al subir:', error);
+    return null;
+  }
+
+  const { data: publicUrlData } = supabaseClient.storage
+    .from('imagenes')
+    .getPublicUrl(nombreArchivo);
+
+  return publicUrlData.publicUrl;
+}
+
+// Cargar tabla
 async function cargarTablaAdmin() {
   const { data, error } = await supabaseClient
     .from('anuncios')
@@ -68,17 +95,49 @@ async function cargarTablaAdmin() {
   `).join('');
 }
 
+// Guardar
 formAnuncio.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const id = document.getElementById('anuncio-id').value;
+  uploadStatus.style.display = 'inline-block';
+  uploadStatus.textContent = 'Guardando datos y subiendo fotos...';
 
-  const fotosArray = [
-    document.getElementById('an-foto-1').value.trim(),
-    document.getElementById('an-foto-2').value.trim(),
-    document.getElementById('an-foto-3').value.trim(),
-    document.getElementById('an-foto-4').value.trim(),
-    document.getElementById('an-foto-5').value.trim(),
-  ].filter(url => url !== '');
+  const id = document.getElementById('anuncio-id').value;
+  
+  // Archivos seleccionados
+  const fileLogo = document.getElementById('an-file-logo').files[0];
+  const fileImagen = document.getElementById('an-file-imagen').files[0];
+  const filesFotos = document.getElementById('an-file-fotos').files;
+
+  // URLs actuales o nuevas
+  let logo_url = document.getElementById('logo-url-actual').value;
+  let imagen_url = document.getElementById('imagen-url-actual').value;
+  let fotosArray = [];
+
+  try {
+    const rawFotos = document.getElementById('fotos-actuales').value;
+    if (rawFotos) fotosArray = JSON.parse(rawFotos);
+  } catch (err) {
+    fotosArray = [];
+  }
+
+  if (fileLogo) {
+    const nuevaUrl = await subirArchivo(fileLogo);
+    if (nuevaUrl) logo_url = nuevaUrl;
+  }
+
+  if (fileImagen) {
+    const nuevaUrl = await subirArchivo(fileImagen);
+    if (nuevaUrl) imagen_url = nuevaUrl;
+  }
+
+  if (filesFotos && filesFotos.length > 0) {
+    const fotosSubidas = [];
+    for (let i = 0; i < Math.min(filesFotos.length, 5); i++) {
+      const url = await subirArchivo(filesFotos[i]);
+      if (url) fotosSubidas.push(url);
+    }
+    if (fotosSubidas.length > 0) fotosArray = fotosSubidas;
+  }
 
   const payload = {
     nombre: document.getElementById('an-nombre').value,
@@ -89,9 +148,9 @@ formAnuncio.addEventListener('submit', async (e) => {
     whatsapp: document.getElementById('an-whatsapp').value,
     direccion: document.getElementById('an-direccion').value,
     descuento: document.getElementById('an-descuento').value,
-    logo_url: document.getElementById('an-logo').value,
-    imagen_url: document.getElementById('an-imagen').value,
-    video_url: document.getElementById('an-video').value.trim(),
+    logo_url: logo_url || null,
+    imagen_url: imagen_url || null,
+    video_url: document.getElementById('an-video').value.trim() || null,
     fotos: fotosArray,
     descripcion: document.getElementById('an-descripcion').value,
     activo: true
@@ -104,6 +163,8 @@ formAnuncio.addEventListener('submit', async (e) => {
     res = await supabaseClient.from('anuncios').insert([payload]);
   }
 
+  uploadStatus.style.display = 'none';
+
   if (res.error) {
     alert('Error al guardar: ' + res.error.message);
   } else {
@@ -115,6 +176,12 @@ formAnuncio.addEventListener('submit', async (e) => {
 function limpiarFormulario() {
   formAnuncio.reset();
   document.getElementById('anuncio-id').value = '';
+  document.getElementById('logo-url-actual').value = '';
+  document.getElementById('imagen-url-actual').value = '';
+  document.getElementById('fotos-actuales').value = '';
+  document.getElementById('logo-preview-text').textContent = '';
+  document.getElementById('imagen-preview-text').textContent = '';
+  document.getElementById('fotos-preview-text').textContent = '';
   formTitle.textContent = 'Publicar nuevo anuncio';
   btnCancelEdit.style.display = 'none';
 }
@@ -129,15 +196,16 @@ window.editarAnuncio = function(a) {
   document.getElementById('an-whatsapp').value = a.whatsapp || '';
   document.getElementById('an-direccion').value = a.direccion || '';
   document.getElementById('an-descuento').value = a.descuento || '';
-  document.getElementById('an-logo').value = a.logo_url || '';
-  document.getElementById('an-imagen').value = a.imagen_url || '';
   document.getElementById('an-video').value = a.video_url || '';
   document.getElementById('an-descripcion').value = a.descripcion || '';
 
-  const fotos = a.fotos || [];
-  for (let i = 1; i <= 5; i++) {
-    document.getElementById(`an-foto-${i}`).value = fotos[i - 1] || '';
-  }
+  document.getElementById('logo-url-actual').value = a.logo_url || '';
+  document.getElementById('imagen-url-actual').value = a.imagen_url || '';
+  document.getElementById('fotos-actuales').value = JSON.stringify(a.fotos || []);
+
+  document.getElementById('logo-preview-text').textContent = a.logo_url ? 'Ya tiene logo cargado (sube uno nuevo si deseas cambiarlo).' : '';
+  document.getElementById('imagen-preview-text').textContent = a.imagen_url ? 'Ya tiene foto principal cargada.' : '';
+  document.getElementById('fotos-preview-text').textContent = (a.fotos && a.fotos.length > 0) ? `Tiene ${a.fotos.length} foto(s) en galería.` : '';
 
   formTitle.textContent = 'Editando anuncio: ' + a.nombre;
   btnCancelEdit.style.display = 'inline-block';
