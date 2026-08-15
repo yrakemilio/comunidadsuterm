@@ -1,178 +1,160 @@
-  const loginView = document.getElementById('login-view');
-const panelView = document.getElementById('panel-view');
+const secLogin = document.getElementById('sec-login');
+const secPanel = document.getElementById('sec-panel');
+const formLogin = document.getElementById('form-login');
+const btnLogout = document.getElementById('btn-logout');
+const loginError = document.getElementById('login-error');
 
-// ---------- Sesión ----------
+const formAnuncio = document.getElementById('form-anuncio');
+const formTitle = document.getElementById('form-title');
+const btnCancelEdit = document.getElementById('btn-cancel-edit');
+const tablaBody = document.getElementById('tabla-anuncios-body');
+
 async function revisarSesion() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session) {
-    loginView.hidden = true;
-    panelView.hidden = false;
-    cargarLista();
+    secLogin.style.display = 'none';
+    secPanel.style.display = 'block';
+    btnLogout.style.display = 'block';
+    cargarTablaAdmin();
   } else {
-    loginView.hidden = false;
-    panelView.hidden = true;
+    secLogin.style.display = 'block';
+    secPanel.style.display = 'none';
+    btnLogout.style.display = 'none';
   }
 }
 
-document.getElementById('btn-login').addEventListener('click', async () => {
-  const email = document.getElementById('li-email').value.trim();
-  const password = document.getElementById('li-pass').value;
-  const errorEl = document.getElementById('login-error');
-  errorEl.textContent = '';
+formLogin.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginError.style.display = 'none';
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
 
   const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) {
-    errorEl.textContent = 'Correo o contraseña incorrectos.';
-    return;
+    loginError.textContent = 'Credenciales inválidas: ' + error.message;
+    loginError.style.display = 'block';
+  } else {
+    revisarSesion();
   }
-  revisarSesion();
 });
 
-document.getElementById('btn-logout').addEventListener('click', async () => {
+btnLogout.addEventListener('click', async () => {
   await supabaseClient.auth.signOut();
   revisarSesion();
 });
 
-// ---------- Formulario ----------
-const form = document.getElementById('form-anuncio');
-const formMsg = document.getElementById('form-msg');
-const formTitle = document.getElementById('form-title');
-const btnCancelar = document.getElementById('btn-cancelar-edicion');
-let editandoId = null; // null = creando nuevo
-
-const campos = {
-  id: document.getElementById('a-id'),
-  nombre: document.getElementById('a-nombre'),
-  seccion: document.getElementById('a-seccion'),
-  ciudad: document.getElementById('a-ciudad'),
-  categoria: document.getElementById('a-categoria'),
-  descripcion: document.getElementById('a-desc'),
-  whatsapp: document.getElementById('a-whats'),
-  descuento: document.getElementById('a-descuento'),
-  pagina: document.getElementById('a-pagina'),
-  activo: document.getElementById('a-activo'),
-};
-
-function limpiarFormulario() {
-  form.reset();
-  campos.activo.checked = true;
-  campos.id.disabled = false;
-  editandoId = null;
-  formTitle.textContent = 'Nuevo anuncio';
-  btnCancelar.hidden = true;
-}
-
-btnCancelar.addEventListener('click', limpiarFormulario);
-
-async function subirImagen(file, carpeta) {
-  if (!file) return null;
-  const ext = file.name.split('.').pop();
-  const ruta = `${carpeta}/${Date.now()}.${ext}`;
-  const { error } = await supabaseClient.storage.from('anuncios').upload(ruta, file, { upsert: true });
-  if (error) throw error;
-  const { data } = supabaseClient.storage.from('anuncios').getPublicUrl(ruta);
-  return data.publicUrl;
-}
-
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  formMsg.style.color = 'var(--ink-soft)';
-  formMsg.textContent = 'Guardando…';
-
-  try {
-    const logoFile = document.getElementById('a-logo-file').files[0];
-    const imgFile = document.getElementById('a-img-file').files[0];
-
-    const registro = {
-      id: campos.id.value.trim(),
-      nombre: campos.nombre.value.trim(),
-      seccion: campos.seccion.value.trim(),
-      ciudad: campos.ciudad.value.trim(),
-      categoria: campos.categoria.value.trim(),
-      descripcion: campos.descripcion.value.trim(),
-      whatsapp: campos.whatsapp.value.trim(),
-      descuento: campos.descuento.value.trim(),
-      pagina: campos.pagina.value.trim(),
-      activo: campos.activo.checked,
-    };
-
-    if (logoFile) registro.logo_url = await subirImagen(logoFile, `${registro.id}/logo`);
-    if (imgFile) registro.imagen_url = await subirImagen(imgFile, `${registro.id}/imagen`);
-
-    const { error } = await supabaseClient.from('anuncios').upsert(registro, { onConflict: 'id' });
-    if (error) throw error;
-
-    formMsg.style.color = 'var(--good)';
-    formMsg.textContent = 'Anuncio guardado correctamente.';
-    limpiarFormulario();
-    cargarLista();
-  } catch (err) {
-    formMsg.style.color = '#A23B2E';
-    formMsg.textContent = `Error al guardar: ${err.message || err}`;
-  }
-});
-
-// ---------- Lista / editar / borrar ----------
-async function cargarLista() {
-  const cont = document.getElementById('lista-anuncios');
+async function cargarTablaAdmin() {
   const { data, error } = await supabaseClient
     .from('anuncios')
     .select('*')
     .order('creado_en', { ascending: false });
 
-  if (error) {
-    cont.innerHTML = `<p style="color:#A23B2E;">Error al cargar: ${error.message}</p>`;
+  if (error || !data || data.length === 0) {
+    tablaBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No hay anuncios registrados.</td></tr>`;
     return;
   }
 
-  if (!data || data.length === 0) {
-    cont.innerHTML = `<p style="color:var(--ink-faint);">Todavía no hay anuncios.</p>`;
-    return;
-  }
-
-  cont.innerHTML = data.map(a => `
-    <div class="admin-list-item">
-      <img src="${a.logo_url || ''}" alt="">
-      <div class="grow">
-        <div class="name">${a.nombre} ${a.activo ? '' : '<span style="color:var(--ink-faint);font-weight:400;">(oculto)</span>'}</div>
-        <div class="meta">${a.id} · sec. ${a.seccion} · ${a.ciudad}</div>
-      </div>
-      <button class="icon-btn" data-editar="${a.id}">Editar</button>
-      <button class="icon-btn danger" data-borrar="${a.id}">Borrar</button>
-    </div>
+  tablaBody.innerHTML = data.map(a => `
+    <tr>
+      <td><strong>${a.nombre}</strong></td>
+      <td>${a.seccion}</td>
+      <td>${a.ciudad}</td>
+      <td>${a.categoria}</td>
+      <td>
+        <button class="btn secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="editarAnuncio(${JSON.stringify(a).replace(/"/g, '&quot;')})">Editar</button>
+        <button class="btn danger" style="padding:4px 8px; font-size:0.75rem;" onclick="borrarAnuncio(${a.id})">Borrar</button>
+      </td>
+    </tr>
   `).join('');
-
-  cont.querySelectorAll('[data-editar]').forEach(btn => {
-    btn.addEventListener('click', () => cargarEnFormulario(data.find(x => x.id === btn.dataset.editar)));
-  });
-  cont.querySelectorAll('[data-borrar]').forEach(btn => {
-    btn.addEventListener('click', () => borrar(btn.dataset.borrar));
-  });
 }
 
-function cargarEnFormulario(a) {
-  campos.id.value = a.id;
-  campos.id.disabled = true; // no se cambia el id en edición
-  campos.nombre.value = a.nombre;
-  campos.seccion.value = a.seccion;
-  campos.ciudad.value = a.ciudad;
-  campos.categoria.value = a.categoria;
-  campos.descripcion.value = a.descripcion || '';
-  campos.whatsapp.value = a.whatsapp || '';
-  campos.descuento.value = a.descuento || '';
-  campos.pagina.value = a.pagina || '';
-  campos.activo.checked = a.activo;
-  editandoId = a.id;
-  formTitle.textContent = `Editando: ${a.nombre}`;
-  btnCancelar.hidden = false;
+formAnuncio.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('anuncio-id').value;
+
+  const fotosArray = [
+    document.getElementById('an-foto-1').value.trim(),
+    document.getElementById('an-foto-2').value.trim(),
+    document.getElementById('an-foto-3').value.trim(),
+    document.getElementById('an-foto-4').value.trim(),
+    document.getElementById('an-foto-5').value.trim(),
+  ].filter(url => url !== '');
+
+  const payload = {
+    nombre: document.getElementById('an-nombre').value,
+    categoria: document.getElementById('an-categoria').value,
+    seccion: document.getElementById('an-seccion').value,
+    ciudad: document.getElementById('an-ciudad').value,
+    telefono: document.getElementById('an-telefono').value,
+    whatsapp: document.getElementById('an-whatsapp').value,
+    direccion: document.getElementById('an-direccion').value,
+    descuento: document.getElementById('an-descuento').value,
+    logo_url: document.getElementById('an-logo').value,
+    imagen_url: document.getElementById('an-imagen').value,
+    video_url: document.getElementById('an-video').value.trim(),
+    fotos: fotosArray,
+    descripcion: document.getElementById('an-descripcion').value,
+    activo: true
+  };
+
+  let res;
+  if (id) {
+    res = await supabaseClient.from('anuncios').update(payload).eq('id', id);
+  } else {
+    res = await supabaseClient.from('anuncios').insert([payload]);
+  }
+
+  if (res.error) {
+    alert('Error al guardar: ' + res.error.message);
+  } else {
+    limpiarFormulario();
+    cargarTablaAdmin();
+  }
+});
+
+function limpiarFormulario() {
+  formAnuncio.reset();
+  document.getElementById('anuncio-id').value = '';
+  formTitle.textContent = 'Publicar nuevo anuncio';
+  btnCancelEdit.style.display = 'none';
+}
+
+window.editarAnuncio = function(a) {
+  document.getElementById('anuncio-id').value = a.id;
+  document.getElementById('an-nombre').value = a.nombre || '';
+  document.getElementById('an-categoria').value = a.categoria || '';
+  document.getElementById('an-seccion').value = a.seccion || '';
+  document.getElementById('an-ciudad').value = a.ciudad || '';
+  document.getElementById('an-telefono').value = a.telefono || '';
+  document.getElementById('an-whatsapp').value = a.whatsapp || '';
+  document.getElementById('an-direccion').value = a.direccion || '';
+  document.getElementById('an-descuento').value = a.descuento || '';
+  document.getElementById('an-logo').value = a.logo_url || '';
+  document.getElementById('an-imagen').value = a.imagen_url || '';
+  document.getElementById('an-video').value = a.video_url || '';
+  document.getElementById('an-descripcion').value = a.descripcion || '';
+
+  const fotos = a.fotos || [];
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById(`an-foto-${i}`).value = fotos[i - 1] || '';
+  }
+
+  formTitle.textContent = 'Editando anuncio: ' + a.nombre;
+  btnCancelEdit.style.display = 'inline-block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+};
 
-async function borrar(id) {
-  if (!confirm('¿Borrar este anuncio permanentemente?')) return;
-  const { error } = await supabaseClient.from('anuncios').delete().eq('id', id);
-  if (error) { alert('Error al borrar: ' + error.message); return; }
-  cargarLista();
-}
+btnCancelEdit.addEventListener('click', limpiarFormulario);
+
+window.borrarAnuncio = async function(id) {
+  if (confirm('¿Seguro que deseas eliminar este anuncio?')) {
+    const { error } = await supabaseClient.from('anuncios').delete().eq('id', id);
+    if (error) {
+      alert('Error al eliminar: ' + error.message);
+    } else {
+      cargarTablaAdmin();
+    }
+  }
+};
 
 revisarSesion();
