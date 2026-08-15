@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Comunidad SUTERM — Directorio</title>
+<title>Anuncio — Comunidad SUTERM</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,49 +18,18 @@
   </div>
 </header>
 
-<main class="wrap">
-  <section class="hero">
-    <p class="hero-eyebrow">Directorio de negocios agremiados</p>
-    <h1>Productos y servicios de SUTERMISTAS, para SUTERMISTAS.</h1>
-    <p>Encuentra negocios de compañeros por sección, ciudad o categoría. Cada anuncio es publicado y verificado por la administración de la Comunidad SUTERM.</p>
-  </section>
-
-  <section class="filters">
-    <input type="search" id="f-buscar" placeholder="Buscar por nombre o descripción…">
-    <select id="f-seccion"><option value="">Sección: todas</option></select>
-    <select id="f-ciudad"><option value="">Ciudad: todas</option></select>
-    <select id="f-categoria"><option value="">Categoría: todas</option></select>
-  </section>
-
-  <p class="results-count" id="results-count"></p>
-
-  <section class="grid" id="grid">
-    <div class="state" id="state-loading">
-      <strong>Cargando anuncios…</strong>
-      Un momento por favor.
-    </div>
-  </section>
+<main class="wrap" id="contenido">
+  <div class="state" id="state-loading" style="margin-top:24px;">
+    <strong>Cargando anuncio…</strong>
+  </div>
 </main>
 
 <footer class="site">
-  <div class="wrap">
-    © <span id="year"></span> Comunidad SUTERM · Este directorio es una plataforma de promoción entre agremiados.
-    <a href="#" id="ver-aviso" style="text-decoration:underline;">Ver aviso de deslinde</a>
-  </div>
+  <div class="wrap">© <span id="year"></span> Comunidad SUTERM</div>
 </footer>
-
-<div class="legal-overlay" id="legal-overlay" hidden>
-  <div class="legal-box">
-    <h2>Aviso de deslinde de responsabilidad</h2>
-    <p>La Comunidad SUTERM y el SUTERM actúan únicamente como plataformas de promoción y difusión de los negocios de sus agremiados.</p>
-    <p>Se deslindan de cualquier responsabilidad legal, fiscal, civil o penal derivada del uso, contratación o consumo de los productos y servicios ofrecidos.</p>
-    <p>Toda relación comercial entre usuarios y agremiados es responsabilidad exclusiva de las partes. Al usar esta plataforma, aceptas que cualquier transacción se realiza bajo tu propio riesgo.</p>
-    <button class="btn primary" id="aceptar-aviso">Aceptar y continuar</button>
-  </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script src="app.js"></script>
+<script src="detalle.js"></script>
 </body>
 </html>
