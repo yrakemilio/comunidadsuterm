@@ -3,15 +3,25 @@ document.getElementById('year').textContent = new Date().getFullYear();
 // ---------- Aviso legal (una vez por navegador) ----------
 const overlay = document.getElementById('legal-overlay');
 const yaAcepto = localStorage.getItem('cs_aviso_aceptado');
-if (!yaAcepto) overlay.hidden = false;
+
+if (!yaAcepto) {
+  overlay.hidden = false;
+  overlay.style.display = 'flex';
+} else {
+  overlay.hidden = true;
+  overlay.style.display = 'none';
+}
 
 document.getElementById('aceptar-aviso').addEventListener('click', () => {
   localStorage.setItem('cs_aviso_aceptado', '1');
   overlay.hidden = true;
+  overlay.style.display = 'none';
 });
+
 document.getElementById('ver-aviso').addEventListener('click', (e) => {
   e.preventDefault();
   overlay.hidden = false;
+  overlay.style.display = 'flex';
 });
 
 // ---------- Estado ----------
@@ -24,13 +34,13 @@ const fCiudad = document.getElementById('f-ciudad');
 const fCategoria = document.getElementById('f-categoria');
 
 function poblarFiltro(select, valores, etiqueta) {
-  const unicos = [...new Set(valores)].sort((a, b) => a.localeCompare(b, 'es'));
+  const unicos = [...new Set(valores.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
   select.innerHTML = `<option value="">${etiqueta}: todas</option>` +
     unicos.map(v => `<option value="${v}">${v}</option>`).join('');
 }
 
 function iniciales(nombre) {
-  return nombre.split(' ').slice(0, 2).map(p => p[0]?.toUpperCase() || '').join('');
+  return (nombre || '').split(' ').slice(0, 2).map(p => p[0]?.toUpperCase() || '').join('');
 }
 
 function renderCard(a) {
@@ -94,6 +104,15 @@ function renderResultados(lista) {
 }
 
 async function cargarAnuncios() {
+  if (typeof supabaseClient === 'undefined') {
+    grid.innerHTML = `
+      <div class="state error">
+        <strong>Error de configuración</strong>
+        No se pudo inicializar la conexión con Supabase. Revisa config.js.
+      </div>`;
+    return;
+  }
+
   const { data, error } = await supabaseClient
     .from('anuncios')
     .select('*')
@@ -130,8 +149,10 @@ async function cargarAnuncios() {
 }
 
 [fBuscar, fSeccion, fCiudad, fCategoria].forEach(el => {
-  el.addEventListener('input', aplicarFiltros);
-  el.addEventListener('change', aplicarFiltros);
+  if (el) {
+    el.addEventListener('input', aplicarFiltros);
+    el.addEventListener('change', aplicarFiltros);
+  }
 });
 
 cargarAnuncios();
