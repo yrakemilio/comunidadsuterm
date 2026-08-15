@@ -42,6 +42,10 @@
       <h2 id="form-title" style="margin-bottom:16px;">Publicar nuevo anuncio</h2>
       <form id="form-anuncio">
         <input type="hidden" id="anuncio-id">
+        <input type="hidden" id="logo-url-actual">
+        <input type="hidden" id="imagen-url-actual">
+        <input type="hidden" id="fotos-actuales">
+
         <div class="form-grid">
           <div class="form-group">
             <label for="an-nombre">Nombre del negocio *</label>
@@ -75,36 +79,41 @@
             <label for="an-descuento">Descuento o beneficio a agremiados</label>
             <input type="text" id="an-descuento" placeholder="Ej. 10% de descuento en mano de obra">
           </div>
+
+          <!-- Carga de Archivos -->
           <div class="form-group">
-            <label for="an-logo">URL del Logo (Tarjeta de inicio)</label>
-            <input type="url" id="an-logo" placeholder="https://...">
+            <label for="an-file-logo">Subir Logo (Tarjeta de inicio)</label>
+            <input type="file" id="an-file-logo" accept="image/*">
+            <span id="logo-preview-text" style="font-size:0.75rem; color:#64748b;"></span>
           </div>
+
           <div class="form-group">
-            <label for="an-imagen">URL Foto Principal / Banner</label>
-            <input type="url" id="an-imagen" placeholder="https://...">
+            <label for="an-file-imagen">Subir Foto Principal / Banner</label>
+            <input type="file" id="an-file-imagen" accept="image/*">
+            <span id="imagen-preview-text" style="font-size:0.75rem; color:#64748b;"></span>
           </div>
+
+          <div class="form-group full">
+            <label for="an-file-fotos">Subir Galería de fotos (hasta 5 imágenes)</label>
+            <input type="file" id="an-file-fotos" accept="image/*" multiple>
+            <span id="fotos-preview-text" style="font-size:0.75rem; color:#64748b;"></span>
+          </div>
+
           <div class="form-group full">
             <label for="an-video">Enlace de YouTube / Entrevista (opcional)</label>
             <input type="url" id="an-video" placeholder="https://www.youtube.com/watch?v=...">
           </div>
-          <div class="form-group full">
-            <label>Galería de fotos adicionales (hasta 5):</label>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
-              <input type="url" id="an-foto-1" placeholder="URL Foto 1">
-              <input type="url" id="an-foto-2" placeholder="URL Foto 2">
-              <input type="url" id="an-foto-3" placeholder="URL Foto 3">
-              <input type="url" id="an-foto-4" placeholder="URL Foto 4">
-              <input type="url" id="an-foto-5" placeholder="URL Foto 5">
-            </div>
-          </div>
+
           <div class="form-group full">
             <label for="an-descripcion">Descripción detallada</label>
             <textarea id="an-descripcion" rows="3"></textarea>
           </div>
         </div>
-        <div style="display:flex; gap:10px;">
+
+        <div style="display:flex; gap:10px; align-items:center;">
           <button type="submit" class="btn primary" id="btn-save" style="width:auto;">Guardar anuncio</button>
           <button type="button" class="btn secondary" id="btn-cancel-edit" style="display:none; width:auto;">Cancelar edición</button>
+          <span id="upload-status" style="font-size:0.85rem; color:#0284c7; display:none;">Subiendo imágenes...</span>
         </div>
       </form>
     </div>
