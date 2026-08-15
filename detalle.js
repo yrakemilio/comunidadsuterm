@@ -1,20 +1,19 @@
 document.getElementById('year').textContent = new Date().getFullYear();
 
-const params = new URLSearchParams(location.search);
+const params = new URLSearchParams(window.location.search);
 const id = params.get('id');
-const contenido = document.getElementById('contenido');
+const container = document.getElementById('detalle-container');
 
-function limpiarWhatsapp(numero) {
-  return (numero || '').replace(/\D/g, '');
+function obtenerYouTubeEmbed(url) {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
 }
 
-function iniciales(nombre) {
-  return nombre.split(' ').slice(0, 2).map(p => p[0]?.toUpperCase() || '').join('');
-}
-
-async function cargar() {
+async function cargarDetalle() {
   if (!id) {
-    contenido.innerHTML = `<div class="state error" style="margin-top:24px;"><strong>Anuncio no especificado</strong></div>`;
+    container.innerHTML = `<div class="state error"><strong>Anuncio no especificado</strong><br><a href="index.html">Regresar al inicio</a></div>`;
     return;
   }
 
@@ -22,52 +21,82 @@ async function cargar() {
     .from('anuncios')
     .select('*')
     .eq('id', id)
-    .eq('activo', true)
     .single();
 
   if (error || !a) {
-    contenido.innerHTML = `
-      <div class="state error" style="margin-top:24px;">
-        <strong>No encontramos este anuncio</strong>
-        Puede que ya no esté disponible.
-      </div>
-      <a class="back-link" href="index.html">← Volver al directorio</a>`;
+    container.innerHTML = `<div class="state error"><strong>No se encontró el anuncio</strong><br><a href="index.html">Regresar al inicio</a></div>`;
     return;
   }
 
   document.title = `${a.nombre} — Comunidad SUTERM`;
 
-  const wa = limpiarWhatsapp(a.whatsapp);
-  const logo = a.logo_url
-    ? `<img src="${a.logo_url}" alt="${a.nombre}" style="width:100%;height:100%;object-fit:contain;">`
-    : `<span class="placeholder" style="font-family:var(--display);font-weight:700;font-size:1.4rem;color:var(--accent-ink);">${iniciales(a.nombre)}</span>`;
+  const banner = a.imagen_url ? `<img src="${a.imagen_url}" alt="${a.nombre}" class="detail-banner">` : '';
+  const telLink = a.telefono ? `<a class="contact-btn btn-tel" href="tel:${a.telefono}">📞 Llamar (${a.telefono})</a>` : '';
+  const waLink = a.whatsapp ? `<a class="contact-btn btn-wa" href="https://wa.me/${a.whatsapp.replace(/[^0-9]/g, '')}" target="_blank">💬 WhatsApp</a>` : '';
 
-  contenido.innerHTML = `
-    <div class="detail-card">
-      <div class="detail-top">
-        <div class="detail-logo">${logo}</div>
-        <div>
-          <h1 style="font-family:var(--display);font-size:1.4rem;margin:0 0 4px;">${a.nombre}</h1>
-          <p style="color:var(--ink-soft);margin:0;">${a.ciudad} · Sección ${a.seccion}</p>
+  // Video de YouTube
+  let videoHtml = '';
+  const embedUrl = obtenerYouTubeEmbed(a.video_url);
+  if (embedUrl) {
+    videoHtml = `
+      <div style="margin: 20px 0;">
+        <h3 style="font-size:1.05rem; color:#0f172a; margin-bottom:10px;">📹 Conoce más en nuestra entrevista:</h3>
+        <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:10px; border:1px solid #e2e8f0;">
+          <iframe src="${embedUrl}" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen></iframe>
         </div>
       </div>
+    `;
+  }
 
-      ${a.imagen_url ? `<img src="${a.imagen_url}" alt="" style="border-radius:12px;margin-bottom:16px;max-height:280px;object-fit:cover;width:100%;">` : ''}
+  // Galería de fotos
+  let galeriaHtml = '';
+  if (a.fotos && Array.isArray(a.fotos) && a.fotos.length > 0) {
+    const items = a.fotos.map(url => `
+      <a href="${url}" target="_blank" style="display:block; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; height:120px;">
+        <img src="${url}" alt="Foto de ${a.nombre}" style="width:100%; height:100%; object-fit:cover;" loading="lazy">
+      </a>
+    `).join('');
 
-      <div class="card-tags" style="margin-bottom:14px;">
-        <span class="tag">${a.categoria}</span>
-        ${a.descuento ? `<span class="tag discount">${a.descuento}</span>` : ''}
+    galeriaHtml = `
+      <div style="margin: 24px 0;">
+        <h3 style="font-size:1.05rem; color:#0f172a; margin-bottom:10px;">📸 Galería de fotos:</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:10px;">
+          ${items}
+        </div>
       </div>
+    `;
+  }
 
-      ${a.descripcion ? `<p style="color:var(--ink-soft);">${a.descripcion}</p>` : ''}
+  container.innerHTML = `
+    <div class="detail-card">
+      ${banner}
+      <div class="detail-body">
+        <div class="detail-header">
+          <div>
+            <h1 style="font-size:1.6rem; color:#0f172a; margin-bottom:4px;">${a.nombre}</h1>
+            <p style="color:#64748b; font-size:0.95rem;">📍 ${a.ciudad} · Sección ${a.seccion}</p>
+          </div>
+          <span class="tag" style="font-size:0.85rem; padding:4px 10px;">${a.categoria}</span>
+        </div>
 
-      <div class="cta-row">
-        ${wa ? `<a class="btn primary" href="https://wa.me/52${wa}" target="_blank" rel="noopener">Escribir por WhatsApp</a>` : ''}
-        ${a.pagina && a.pagina.includes('.') && !a.pagina.toLowerCase().includes('notiene') ? `<a class="btn" href="https://${a.pagina.replace(/^https?:\/\//,'')}" target="_blank" rel="noopener">Visitar página</a>` : ''}
+        ${a.descuento ? `<div style="margin:14px 0;"><span class="tag discount" style="font-size:0.9rem; padding:6px 12px;">🏷️ Descuento a agremiados: ${a.descuento}</span></div>` : ''}
+
+        <div style="margin:20px 0; font-size:1rem; color:#334155; line-height:1.6; white-space:pre-line;">
+          ${a.descripcion || 'Sin descripción detallada.'}
+        </div>
+
+        ${videoHtml}
+        ${galeriaHtml}
+
+        ${a.direccion ? `<p style="font-size:0.9rem; color:#64748b; margin-bottom:12px;"><strong>Dirección / Ubicación:</strong> ${a.direccion}</p>` : ''}
+
+        <div class="contact-btns">
+          ${waLink}
+          ${telLink}
+        </div>
       </div>
     </div>
-    <a class="back-link" href="index.html">← Volver al directorio</a>
   `;
 }
 
-cargar();
+cargarDetalle();
