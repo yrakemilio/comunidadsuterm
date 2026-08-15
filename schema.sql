@@ -21,10 +21,11 @@ create table if not exists anuncios (
   descuento     text,
   pagina        text,
   logo_url      text,
-  imagen_url    text,
+  imagenes      text[] not null default '{}',       -- galería del anuncio, máximo 5 URLs
   activo        boolean not null default true,      -- permite ocultar sin borrar
   creado_en     timestamptz not null default now(),
-  actualizado_en timestamptz not null default now()
+  actualizado_en timestamptz not null default now(),
+  constraint max_5_imagenes check (array_length(imagenes, 1) is null or array_length(imagenes, 1) <= 5)
 );
 
 -- Mantener actualizado_en al día automáticamente

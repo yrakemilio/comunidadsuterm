@@ -25,6 +25,9 @@ Exporta tu hoja "anuncios" como CSV (Archivo → Descargar → CSV) y súbelo �
 2. En Vercel, tu proyecto ya apunta a ese repo — solo haz push y se despliega solo.
 3. El panel de administración queda en `tudominio.vercel.app/admin.html` — no está enlazado desde el sitio público, solo tú conoces la ruta. Nadie sin tu correo/contraseña puede publicar.
 
+## Si ya tenías el sitio corriendo: migración a galería (5 imágenes)
+Como ya habías ejecutado `schema.sql` antes, corre además `migracion_galeria.sql` en el SQL Editor de Supabase — agrega la columna `imagenes` (arreglo), migra tu imagen anterior si tenías alguna, y quita la columna vieja `imagen_url`. Luego reemplaza `admin.html`, `admin.js`, `detalle.js` y `style.css` con estas versiones nuevas.
+
 ## Estructura de archivos
 - `index.html` / `app.js` — directorio público
 - `detalle.html` / `detalle.js` — ficha de cada anuncio
