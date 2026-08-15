@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin — Comunidad SUTERM</title>
-<link rel="stylesheet" href="style.css">
-<meta name="robots" content="noindex, nofollow">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administración — Comunidad SUTERM</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -13,109 +12,123 @@
   <div class="site-header-inner">
     <a class="brand" href="index.html">
       <span class="brand-mark">CS</span>
-      <span class="brand-name">Comunidad SUTERM</span>
+      <span class="brand-name">Panel Administrativo</span>
     </a>
-    <span class="brand-sub">Panel de administración</span>
+    <button id="btn-logout" class="btn secondary" style="display:none; padding:6px 12px; font-size:0.8rem;">Cerrar sesión</button>
   </div>
 </header>
 
-<!-- ---------- LOGIN ---------- -->
-<main class="wrap" id="login-view">
-  <div class="panel login-box">
-    <h2>Iniciar sesión</h2>
-    <div class="field">
-      <label for="li-email">Correo</label>
-      <input type="email" id="li-email" autocomplete="username">
-    </div>
-    <div class="field">
-      <label for="li-pass">Contraseña</label>
-      <input type="password" id="li-pass" autocomplete="current-password">
-    </div>
-    <button class="btn primary" id="btn-login" style="width:100%;justify-content:center;">Entrar</button>
-    <p id="login-error" style="color:#A23B2E;font-size:0.85rem;margin-top:10px;"></p>
-  </div>
-</main>
+<main class="wrap">
+  <!-- Login Section -->
+  <section id="sec-login" class="admin-card" style="max-width:400px; margin:40px auto;">
+    <h2 style="margin-bottom:16px; text-align:center;">Acceso Administrador</h2>
+    <form id="form-login">
+      <div class="form-group" style="margin-bottom:12px;">
+        <label for="login-email">Correo electrónico</label>
+        <input type="email" id="login-email" required>
+      </div>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label for="login-password">Contraseña</label>
+        <input type="password" id="login-password" required>
+      </div>
+      <button type="submit" class="btn primary">Entrar</button>
+      <p id="login-error" style="color:#dc2626; font-size:0.85rem; margin-top:10px; display:none;"></p>
+    </form>
+  </section>
 
-<!-- ---------- PANEL ---------- -->
-<main class="wrap admin-shell" id="panel-view" hidden>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-    <h1 style="font-family:var(--display);font-size:1.3rem;margin:0;">Anuncios</h1>
-    <button class="icon-btn" id="btn-logout">Cerrar sesión</button>
-  </div>
-
-  <div class="admin-grid">
-    <div class="panel">
-      <h2 id="form-title">Nuevo anuncio</h2>
+  <!-- CRUD Panel Section -->
+  <section id="sec-panel" style="display:none;">
+    <div class="admin-card">
+      <h2 id="form-title" style="margin-bottom:16px;">Publicar nuevo anuncio</h2>
       <form id="form-anuncio">
-        <div class="field">
-          <label for="a-id">Id (slug único, sin espacios) *</label>
-          <input type="text" id="a-id" required pattern="[a-z0-9_\-]+">
-        </div>
-        <div class="field">
-          <label for="a-nombre">Nombre *</label>
-          <input type="text" id="a-nombre" required>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="a-seccion">Sección *</label>
-            <input type="text" id="a-seccion" required>
+        <input type="hidden" id="anuncio-id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="an-nombre">Nombre del negocio *</label>
+            <input type="text" id="an-nombre" required>
           </div>
-          <div class="field">
-            <label for="a-ciudad">Ciudad *</label>
-            <input type="text" id="a-ciudad" required>
+          <div class="form-group">
+            <label for="an-categoria">Categoría *</label>
+            <input type="text" id="an-categoria" placeholder="Ej. Alimentos, Mecánica, Legal" required>
+          </div>
+          <div class="form-group">
+            <label for="an-seccion">Sección sindical *</label>
+            <input type="text" id="an-seccion" placeholder="Ej. 150" required>
+          </div>
+          <div class="form-group">
+            <label for="an-ciudad">Ciudad / Municipio *</label>
+            <input type="text" id="an-ciudad" placeholder="Ej. Cuernavaca" required>
+          </div>
+          <div class="form-group">
+            <label for="an-telefono">Teléfono (Llamadas)</label>
+            <input type="text" id="an-telefono">
+          </div>
+          <div class="form-group">
+            <label for="an-whatsapp">WhatsApp (10 dígitos)</label>
+            <input type="text" id="an-whatsapp">
+          </div>
+          <div class="form-group full">
+            <label for="an-direccion">Dirección física</label>
+            <input type="text" id="an-direccion">
+          </div>
+          <div class="form-group full">
+            <label for="an-descuento">Descuento o beneficio a agremiados</label>
+            <input type="text" id="an-descuento" placeholder="Ej. 10% de descuento en mano de obra">
+          </div>
+          <div class="form-group">
+            <label for="an-logo">URL del Logo (Tarjeta de inicio)</label>
+            <input type="url" id="an-logo" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label for="an-imagen">URL Foto Principal / Banner</label>
+            <input type="url" id="an-imagen" placeholder="https://...">
+          </div>
+          <div class="form-group full">
+            <label for="an-video">Enlace de YouTube / Entrevista (opcional)</label>
+            <input type="url" id="an-video" placeholder="https://www.youtube.com/watch?v=...">
+          </div>
+          <div class="form-group full">
+            <label>Galería de fotos adicionales (hasta 5):</label>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+              <input type="url" id="an-foto-1" placeholder="URL Foto 1">
+              <input type="url" id="an-foto-2" placeholder="URL Foto 2">
+              <input type="url" id="an-foto-3" placeholder="URL Foto 3">
+              <input type="url" id="an-foto-4" placeholder="URL Foto 4">
+              <input type="url" id="an-foto-5" placeholder="URL Foto 5">
+            </div>
+          </div>
+          <div class="form-group full">
+            <label for="an-descripcion">Descripción detallada</label>
+            <textarea id="an-descripcion" rows="3"></textarea>
           </div>
         </div>
-        <div class="field">
-          <label for="a-categoria">Categoría *</label>
-          <input type="text" id="a-categoria" required list="cats">
-          <datalist id="cats">
-            <option value="Servicios"></option>
-            <option value="Productos"></option>
-            <option value="Alimentos"></option>
-          </datalist>
+        <div style="display:flex; gap:10px;">
+          <button type="submit" class="btn primary" id="btn-save" style="width:auto;">Guardar anuncio</button>
+          <button type="button" class="btn secondary" id="btn-cancel-edit" style="display:none; width:auto;">Cancelar edición</button>
         </div>
-        <div class="field">
-          <label for="a-desc">Descripción</label>
-          <textarea id="a-desc"></textarea>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="a-whats">WhatsApp (10 dígitos)</label>
-            <input type="text" id="a-whats">
-          </div>
-          <div class="field">
-            <label for="a-descuento">Descuento</label>
-            <input type="text" id="a-descuento">
-          </div>
-        </div>
-        <div class="field">
-          <label for="a-pagina">Página web</label>
-          <input type="text" id="a-pagina" placeholder="notiene.com">
-        </div>
-        <div class="field">
-          <label for="a-logo-file">Logo (imagen)</label>
-          <input type="file" id="a-logo-file" accept="image/*">
-        </div>
-        <div class="field">
-          <label for="a-img-file">Imagen del anuncio</label>
-          <input type="file" id="a-img-file" accept="image/*">
-        </div>
-        <div class="field">
-          <label><input type="checkbox" id="a-activo" checked style="width:auto;"> Publicado (visible en el directorio)</label>
-        </div>
-        <button class="btn primary" type="submit" style="width:100%;justify-content:center;" id="btn-guardar">Guardar anuncio</button>
-        <button class="icon-btn" type="button" id="btn-cancelar-edicion" style="width:100%;margin-top:8px;" hidden>Cancelar edición</button>
-        <p id="form-msg" style="font-size:0.85rem;margin-top:10px;"></p>
       </form>
     </div>
 
-    <div class="panel">
-      <h2>Anuncios publicados</h2>
-      <div id="lista-anuncios">
-        <p style="color:var(--ink-faint);font-family:var(--mono);font-size:0.85rem;">Cargando…</p>
+    <div class="admin-card">
+      <h2 style="margin-bottom:16px;">Anuncios Registrados</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Negocio</th>
+              <th>Sección</th>
+              <th>Ciudad</th>
+              <th>Categoría</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-anuncios-body">
+            <tr><td colspan="5" style="text-align:center;">Cargando...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
-  </div>
+  </section>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
