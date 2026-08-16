@@ -3,25 +3,15 @@ document.getElementById('year').textContent = new Date().getFullYear();
 // ---------- Aviso legal (una vez por navegador) ----------
 const overlay = document.getElementById('legal-overlay');
 const yaAcepto = localStorage.getItem('cs_aviso_aceptado');
-
-if (!yaAcepto) {
-  overlay.hidden = false;
-  overlay.style.display = 'flex';
-} else {
-  overlay.hidden = true;
-  overlay.style.display = 'none';
-}
+if (!yaAcepto) overlay.hidden = false;
 
 document.getElementById('aceptar-aviso').addEventListener('click', () => {
   localStorage.setItem('cs_aviso_aceptado', '1');
   overlay.hidden = true;
-  overlay.style.display = 'none';
 });
-
 document.getElementById('ver-aviso').addEventListener('click', (e) => {
   e.preventDefault();
   overlay.hidden = false;
-  overlay.style.display = 'flex';
 });
 
 // ---------- Estado ----------
@@ -34,13 +24,13 @@ const fCiudad = document.getElementById('f-ciudad');
 const fCategoria = document.getElementById('f-categoria');
 
 function poblarFiltro(select, valores, etiqueta) {
-  const unicos = [...new Set(valores.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  const unicos = [...new Set(valores)].sort((a, b) => a.localeCompare(b, 'es'));
   select.innerHTML = `<option value="">${etiqueta}: todas</option>` +
     unicos.map(v => `<option value="${v}">${v}</option>`).join('');
 }
 
 function iniciales(nombre) {
-  return (nombre || '').split(' ').slice(0, 2).map(p => p[0]?.toUpperCase() || '').join('');
+  return nombre.split(' ').slice(0, 2).map(p => p[0]?.toUpperCase() || '').join('');
 }
 
 function renderCard(a) {
@@ -103,16 +93,29 @@ function renderResultados(lista) {
   grid.innerHTML = lista.map(renderCard).join('');
 }
 
-async function cargarAnuncios() {
-  if (typeof supabaseClient === 'undefined') {
-    grid.innerHTML = `
-      <div class="state error">
-        <strong>Error de configuración</strong>
-        No se pudo inicializar la conexión con Supabase. Revisa config.js.
-      </div>`;
-    return;
-  }
+async function cargarBanner() {
+  const cont = document.getElementById('banner-destacado');
+  const { data, error } = await supabaseClient
+    .from('banner')
+    .select('*')
+    .eq('id', 1)
+    .single();
 
+  if (error || !data || !data.activo) return; // sin banner, no se muestra nada
+
+  cont.innerHTML = `
+    <div class="banner">
+      ${data.imagen_url ? `<div class="banner-img"><img src="${data.imagen_url}" alt=""></div>` : ''}
+      <div class="banner-body">
+        <p class="banner-eyebrow">Destacado</p>
+        <h2>${data.titulo || ''}</h2>
+        ${data.descripcion ? `<p>${data.descripcion}</p>` : ''}
+        ${data.cta_texto && data.cta_link ? `<a class="btn primary" href="${data.cta_link}" target="_blank" rel="noopener">${data.cta_texto}</a>` : ''}
+      </div>
+    </div>`;
+}
+
+async function cargarAnuncios() {
   const { data, error } = await supabaseClient
     .from('anuncios')
     .select('*')
@@ -149,10 +152,9 @@ async function cargarAnuncios() {
 }
 
 [fBuscar, fSeccion, fCiudad, fCategoria].forEach(el => {
-  if (el) {
-    el.addEventListener('input', aplicarFiltros);
-    el.addEventListener('change', aplicarFiltros);
-  }
+  el.addEventListener('input', aplicarFiltros);
+  el.addEventListener('change', aplicarFiltros);
 });
 
+cargarBanner();
 cargarAnuncios();
