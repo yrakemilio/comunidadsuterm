@@ -485,6 +485,10 @@ footer.site {
   padding: 0;
 }
 
+.legal-overlay[hidden] {
+  display: none;
+}
+
 @media (min-width: 640px) {
   .legal-overlay { align-items: center; padding: 20px; }
 }

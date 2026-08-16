@@ -24,13 +24,13 @@ const fCiudad = document.getElementById('f-ciudad');
 const fCategoria = document.getElementById('f-categoria');
 
 function poblarFiltro(select, valores, etiqueta) {
-  const unicos = [...new Set(valores)].sort((a, b) => a.localeCompare(b, 'es'));
+  const unicos = [...new Set(valores.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
   select.innerHTML = `<option value="">${etiqueta}: todas</option>` +
     unicos.map(v => `<option value="${v}">${v}</option>`).join('');
 }
 
 function iniciales(nombre) {
-  return nombre.split(' ').slice(0, 2).map(p => p[0]?.toUpperCase() || '').join('');
+  return (nombre || '').split(' ').slice(0, 2).map(p => p[0]?.toUpperCase() || '').join('');
 }
 
 function renderCard(a) {
@@ -95,6 +95,8 @@ function renderResultados(lista) {
 
 async function cargarBanner() {
   const cont = document.getElementById('banner-destacado');
+  if (!cont || typeof supabaseClient === 'undefined') return;
+
   const { data, error } = await supabaseClient
     .from('banner')
     .select('*')
@@ -116,6 +118,15 @@ async function cargarBanner() {
 }
 
 async function cargarAnuncios() {
+  if (typeof supabaseClient === 'undefined') {
+    grid.innerHTML = `
+      <div class="state error">
+        <strong>Error de configuración</strong>
+        No se pudo inicializar la conexión con Supabase. Revisa config.js.
+      </div>`;
+    return;
+  }
+
   const { data, error } = await supabaseClient
     .from('anuncios')
     .select('*')
@@ -152,8 +163,10 @@ async function cargarAnuncios() {
 }
 
 [fBuscar, fSeccion, fCiudad, fCategoria].forEach(el => {
-  el.addEventListener('input', aplicarFiltros);
-  el.addEventListener('change', aplicarFiltros);
+  if (el) {
+    el.addEventListener('input', aplicarFiltros);
+    el.addEventListener('change', aplicarFiltros);
+  }
 });
 
 cargarBanner();
