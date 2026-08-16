@@ -8,6 +8,7 @@ async function revisarSesion() {
     loginView.hidden = true;
     panelView.hidden = false;
     cargarLista();
+    cargarBanner();
   } else {
     loginView.hidden = false;
     panelView.hidden = true;
@@ -31,6 +32,58 @@ document.getElementById('btn-login').addEventListener('click', async () => {
 document.getElementById('btn-logout').addEventListener('click', async () => {
   await supabaseClient.auth.signOut();
   revisarSesion();
+});
+
+// ---------- Espacio destacado (banner único) ----------
+const formBanner = document.getElementById('form-banner');
+const bannerMsg = document.getElementById('banner-msg');
+let bannerImgActualUrl = null;
+
+async function cargarBanner() {
+  const { data, error } = await supabaseClient.from('banner').select('*').eq('id', 1).single();
+  if (error || !data) return;
+
+  document.getElementById('b-activo').checked = data.activo;
+  document.getElementById('b-titulo').value = data.titulo || '';
+  document.getElementById('b-desc').value = data.descripcion || '';
+  document.getElementById('b-cta-texto').value = data.cta_texto || '';
+  document.getElementById('b-cta-link').value = data.cta_link || '';
+  bannerImgActualUrl = data.imagen_url || null;
+
+  document.getElementById('b-img-preview').innerHTML = bannerImgActualUrl
+    ? `<div class="galeria-item"><img src="${bannerImgActualUrl}" alt=""></div>`
+    : '';
+}
+
+formBanner.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  bannerMsg.style.color = 'var(--ink-soft)';
+  bannerMsg.textContent = 'Guardando…';
+
+  try {
+    const file = document.getElementById('b-img-file').files[0];
+    const registro = {
+      id: 1,
+      activo: document.getElementById('b-activo').checked,
+      titulo: document.getElementById('b-titulo').value.trim(),
+      descripcion: document.getElementById('b-desc').value.trim(),
+      cta_texto: document.getElementById('b-cta-texto').value.trim(),
+      cta_link: document.getElementById('b-cta-link').value.trim(),
+      imagen_url: bannerImgActualUrl,
+    };
+
+    if (file) registro.imagen_url = await subirImagen(file, 'banner');
+
+    const { error } = await supabaseClient.from('banner').update(registro).eq('id', 1);
+    if (error) throw error;
+
+    bannerMsg.style.color = 'var(--good)';
+    bannerMsg.textContent = 'Destacado guardado.';
+    cargarBanner();
+  } catch (err) {
+    bannerMsg.style.color = '#A23B2E';
+    bannerMsg.textContent = `Error al guardar: ${err.message || err}`;
+  }
 });
 
 // ---------- Formulario ----------
