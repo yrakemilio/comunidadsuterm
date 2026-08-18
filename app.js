@@ -105,6 +105,10 @@ async function cargarBanner() {
 
   if (error || !data || !data.activo) return; // sin banner, no se muestra nada
 
+  const link = data.cta_link && !/^https?:\/\//i.test(data.cta_link)
+    ? `https://${data.cta_link}`
+    : data.cta_link;
+
   cont.innerHTML = `
     <div class="banner">
       ${data.imagen_url ? `<div class="banner-img"><img src="${data.imagen_url}" alt=""></div>` : ''}
@@ -112,7 +116,7 @@ async function cargarBanner() {
         <p class="banner-eyebrow">Destacado</p>
         <h2>${data.titulo || ''}</h2>
         ${data.descripcion ? `<p>${data.descripcion}</p>` : ''}
-        ${data.cta_texto && data.cta_link ? `<a class="btn primary" href="${data.cta_link}" target="_blank" rel="noopener">${data.cta_texto}</a>` : ''}
+        ${data.cta_texto && link ? `<a class="btn primary" href="${link}" target="_blank" rel="noopener">${data.cta_texto}</a>` : ''}
       </div>
     </div>`;
 }
